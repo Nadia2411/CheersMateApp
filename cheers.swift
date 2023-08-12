@@ -64,7 +64,7 @@ struct HomePageView: View {
                     Image("StartButton")
                         .resizable()
                         .scaledToFit()
-                        .frame(width: 150)
+                        .frame(width: 200)
                 }
             }
         }
@@ -94,23 +94,34 @@ struct CustomNavigationBar: View {
     let leadingItem: AnyView?
     
     var body: some View {
-        VStack {
-            Spacer()
-            HStack {
-                leadingItem
+        GeometryReader { geometry in
+            VStack {
                 Spacer()
-                Text(title)
-                    .foregroundColor(.white)
-                    .font(.custom("Helvetica-Bold", size: 30))
+                HStack(spacing: 0) {
+                    HStack {
+                        leadingItem
+                    }
+                    .frame(width: geometry.size.width / 3)
+                    
+                    Text(title)
+                        .foregroundColor(.white)
+                        .font(.custom("Helvetica-Bold", size: 30))
+                        .frame(width: geometry.size.width / 3)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+
+                    Spacer()
+                        .frame(width: geometry.size.width / 3)
+                }
                 Spacer()
             }
-            .padding(.horizontal)
-            Spacer()
+            .background(Color.black)
         }
         .frame(height: 100)
-        .background(Color.black)
     }
 }
+
+
 
 struct PlayerSettingsView: View {
     @State private var numberOfPlayers: Int = 2
@@ -119,7 +130,7 @@ struct PlayerSettingsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            CustomNavigationBar(title: "Mate Setup", leadingItem: AnyView(
+            CustomNavigationBar(title: "Mates", leadingItem: AnyView(
                 Button(action: {
                     navigationCoordinator.currentView = .home
                 }) {
@@ -172,7 +183,7 @@ struct PlayerSettingsView: View {
                             Image("PlayButton")
                                 .resizable()
                                 .scaledToFit()
-                                .frame(width: 150)
+                                .frame(width: 200)
                         }
                         .padding(.horizontal, 28)
                     }
@@ -219,7 +230,7 @@ struct GameplayView: View {
                 Image("NextMateButton")
                     .resizable()
                     .scaledToFit()
-                    .frame(width: 150)
+                    .frame(width: 200)
             }
             .padding()
         }
