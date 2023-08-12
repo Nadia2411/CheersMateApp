@@ -36,6 +36,11 @@ struct ContentView: View {
                 GameplayView(playerNames: [])
             }
         }
+        .background(NavigationConfigurator { nc in
+            nc.navigationBar.barTintColor = .black
+            nc.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont(name: "Helvetica-Bold", size: 18) ?? UIFont.systemFont(ofSize: 18)]
+            nc.navigationBar.tintColor = .white
+        })
     }
 }
 
@@ -55,12 +60,17 @@ struct HomePageView: View {
                     .resizable()
                     .scaledToFit()
                     .padding()
-                NavigationLink("Start", destination: PlayerSettingsView())
-                    .foregroundColor(.white)
+                NavigationLink(destination: PlayerSettingsView()) {
+                    Image("StartButton")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 150)
+                }
             }
         }
         .background(NavigationConfigurator { nc in
             nc.navigationBar.barTintColor = .black
+            nc.navigationBar.titleTextAttributes = [.font: UIFont(name: "Helvetica-Bold", size: 18) ?? UIFont.systemFont(ofSize: 18)]
         })
     }
 }
@@ -79,44 +89,96 @@ struct NavigationConfigurator: UIViewControllerRepresentable {
     }
 }
 
+struct CustomNavigationBar: View {
+    let title: String
+    let leadingItem: AnyView?
+    
+    var body: some View {
+        VStack {
+            Spacer()
+            HStack {
+                leadingItem
+                Spacer()
+                Text(title)
+                    .foregroundColor(.white)
+                    .font(.custom("Helvetica-Bold", size: 30))
+                Spacer()
+            }
+            .padding(.horizontal)
+            Spacer()
+        }
+        .frame(height: 100)
+        .background(Color.black)
+    }
+}
+
 struct PlayerSettingsView: View {
     @State private var numberOfPlayers: Int = 2
     @State private var playerNames: [String] = ["", ""]
+    @EnvironmentObject var navigationCoordinator: NavigationCoordinator
 
     var body: some View {
-        VStack {
-            Text("Mate Setup")
-                .font(.title)
-                .padding()
+        VStack(spacing: 0) {
+            CustomNavigationBar(title: "Mate Setup", leadingItem: AnyView(
+                Button(action: {
+                    navigationCoordinator.currentView = .home
+                }) {
+                    Image("logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                }))
             
-            ForEach(0..<numberOfPlayers, id: \.self) { index in
-                HStack {
-                    TextField("Player \(index + 1) Name", text: Binding(
-                        get: { self.playerNames[index] },
-                        set: { self.playerNames[index] = $0 }
-                    ))
-                    if numberOfPlayers < 10 {
-                        Button(action: {
-                            self.numberOfPlayers += 1
-                            self.playerNames.append("")
-                        }) {
-                            Image(systemName: "plus.circle.fill")
-                                .foregroundColor(.green)
+            ZStack {
+                Color.gray.edgesIgnoringSafeArea(.all)
+                
+                VStack(spacing: 15) {
+                    ForEach(0..<numberOfPlayers, id: \.self) { index in
+                        HStack {
+                            TextField("Player \(index + 1) Name", text: Binding(
+                                get: { self.playerNames[index] },
+                                set: { self.playerNames[index] = $0 }))
+                                .foregroundColor(.white)
+                                .font(.system(size: 25))
+                            
+                            Spacer()
+
+                            if numberOfPlayers < 10 {
+                                Button(action: {
+                                    self.numberOfPlayers += 1
+                                    self.playerNames.append("")
+                                }) {
+                                    Image(systemName:"plus.circle.fill")
+                                        .foregroundColor(.green)
+                                }
+                            }
+                            
+                            if numberOfPlayers > 2 {
+                                Button(action: {
+                                    self.numberOfPlayers -= 1
+                                    self.playerNames.remove(at: index)
+                                }) {
+                                    Image(systemName:"minus.circle.fill").foregroundColor(.red)
+                                }
+                            }
                         }
+                        .padding(.horizontal, 28)
                     }
-                    if numberOfPlayers > 2 {
-                        Button(action: {
-                            self.numberOfPlayers -= 1
-                            self.playerNames.remove(at: index)
-                        }) {
-                            Image(systemName: "minus.circle.fill")
-                                .foregroundColor(.red)
+
+                    Spacer()
+
+                    if playerNames.filter({ !$0.isEmpty }).count >= 2 {
+                        NavigationLink(destination: GameplayView(playerNames: playerNames)) {
+                            Image("PlayButton")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 150)
                         }
+                        .padding(.horizontal, 28)
                     }
                 }
+                .padding(.top, 28)
             }
-            
-            NavigationLink("Play", destination: GameplayView(playerNames: playerNames))
         }
     }
 }
@@ -130,33 +192,38 @@ struct GameplayView: View {
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
     
     var body: some View {
-        VStack {
-            Text(playerNames[currentPlayerIndex])
-                .font(.title)
-                .padding()
+        VStack(spacing: 0) {
+            CustomNavigationBar(title: playerNames[currentPlayerIndex], leadingItem: AnyView(
+                Button(action: {
+                    navigationCoordinator.currentView = .home
+                }) {
+                    Image("logo")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 50, height: 50)
+                }))
+            
+            Spacer()
             
             Text(currentPrompt)
+                .font(Font.custom("Helvetica-Bold", size: 50))
                 .padding()
             
-            Button("Next Mate") {
-                // Update the prompt
+            Spacer()
+            
+            Button(action: {
                 currentPrompt = gameData.getRandomPrompt() ?? "Game Finished!"
                 
-                // Move on to the next player
                 currentPlayerIndex = (currentPlayerIndex + 1) % playerNames.count
+            }) {
+                Image("NextMateButton")
+                    .resizable()
+                    .scaledToFit()
+                    .frame(width: 150)
             }
             .padding()
         }
-        .navigationBarItems(leading:
-            Button(action: {
-                navigationCoordinator.currentView = .home
-            }) {
-                Image("logo")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 30, height: 30)
-            }
-        )
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     init(playerNames: [String]) {
