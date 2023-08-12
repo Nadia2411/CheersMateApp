@@ -1,27 +1,35 @@
+// Cheers App
+
 import SwiftUI
 
 class NavigationCoordinator: ObservableObject {
+    // Enumerated types of views that can be displayed.
     enum ViewType {
         case home
         case playerSetup
         case gameplay
     }
     
+    // Current view displayed. Initialized to home view.
     @Published var currentView: ViewType = .home
 }
 
+// Main app entry point.
 @main
 struct CheersApp: App {
+    // Create an instance of the navigation coordinator.
     @StateObject private var navigationCoordinator = NavigationCoordinator()
 
     var body: some Scene {
         WindowGroup {
+            // Set the content view with the navigation coordinator as the environment object.
             ContentView()
                 .environmentObject(navigationCoordinator)
         }
     }
 }
 
+// The main content view which switches between different views based on the currentView value.
 struct ContentView: View {
     @EnvironmentObject var navigationCoordinator: NavigationCoordinator
 
@@ -36,6 +44,7 @@ struct ContentView: View {
                 GameplayView(playerNames: [])
             }
         }
+        // Apply global configurations to the navigation bar.
         .background(NavigationConfigurator { nc in
             nc.navigationBar.barTintColor = .black
             nc.navigationBar.titleTextAttributes = [.foregroundColor: UIColor.white, .font: UIFont(name: "Helvetica-Bold", size: 18) ?? UIFont.systemFont(ofSize: 18)]
@@ -44,6 +53,7 @@ struct ContentView: View {
     }
 }
 
+// Preview configuration for the ContentView.
 struct ContentView_Previews: PreviewProvider {
     static var previews: some View {
         ContentView()
@@ -51,6 +61,7 @@ struct ContentView_Previews: PreviewProvider {
     }
 }
 
+// Home page view containing the game's logo and start button.
 struct HomePageView: View {
     var body: some View {
         ZStack {
@@ -75,6 +86,7 @@ struct HomePageView: View {
     }
 }
 
+// A helper view for configuring the navigation bar's appearance.
 struct NavigationConfigurator: UIViewControllerRepresentable {
     var configure: (UINavigationController) -> Void = { _ in }
 
@@ -89,6 +101,7 @@ struct NavigationConfigurator: UIViewControllerRepresentable {
     }
 }
 
+// Custom navigation bar view with a given title and an optional leading item.
 struct CustomNavigationBar: View {
     let title: String
     let leadingItem: AnyView?
@@ -121,8 +134,7 @@ struct CustomNavigationBar: View {
     }
 }
 
-
-
+// View for setting up player information.
 struct PlayerSettingsView: View {
     @State private var numberOfPlayers: Int = 2
     @State private var playerNames: [String] = ["", ""]
@@ -144,6 +156,7 @@ struct PlayerSettingsView: View {
                 Color.gray.edgesIgnoringSafeArea(.all)
                 
                 VStack(spacing: 15) {
+                    // Display text fields for entering player names.
                     ForEach(0..<numberOfPlayers, id: \.self) { index in
                         HStack {
                             TextField("Player \(index + 1) Name", text: Binding(
@@ -154,6 +167,7 @@ struct PlayerSettingsView: View {
                             
                             Spacer()
 
+                            // Allow adding players up to a limit of 10.
                             if numberOfPlayers < 10 {
                                 Button(action: {
                                     self.numberOfPlayers += 1
@@ -164,6 +178,7 @@ struct PlayerSettingsView: View {
                                 }
                             }
                             
+                            // Allow removing players down to a minimum of 2.
                             if numberOfPlayers > 2 {
                                 Button(action: {
                                     self.numberOfPlayers -= 1
@@ -178,6 +193,7 @@ struct PlayerSettingsView: View {
 
                     Spacer()
 
+                    // Only proceed to the gameplay if at least two players have been named.
                     if playerNames.filter({ !$0.isEmpty }).count >= 2 {
                         NavigationLink(destination: GameplayView(playerNames: playerNames)) {
                             Image("PlayButton")
@@ -194,7 +210,7 @@ struct PlayerSettingsView: View {
     }
 }
 
-
+// Gameplay view displaying prompts for players.
 struct GameplayView: View {
     let playerNames: [String]
     @State private var currentPrompt: String
@@ -244,6 +260,7 @@ struct GameplayView: View {
     }
 }
 
+// Class responsible for managing game prompts and ensuring no repeat prompts are shown.
 class GameData {
     var prompts: [String] = ["Everyone Drinks",
         "Mate to your left drinks",
